@@ -102,8 +102,6 @@ public class AlignProjectionManager : MonoBehaviour
         {
             var ww = (float)projectorNums[i] / (float)totalProjectorNum;
 
-            Debug.Log("stageWidth : " + stageWidth);
-
             if (screenIdx > 1 && i < screenIdx - 1)
             {
                 offset_x += (stageWidth * ww);
