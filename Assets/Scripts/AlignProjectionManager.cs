@@ -9,8 +9,8 @@ public class AlignProjectionManager : MonoBehaviour
     [SerializeField]
     Canvas mainCanvas;
 
-    //[SerializeField]
-    //ProjectionAlignment align;
+    [SerializeField]
+    ProjectionAlignment align;
 
     int[] projectorNums;
     int totalProjectorNum;
@@ -25,6 +25,19 @@ public class AlignProjectionManager : MonoBehaviour
     public float StageWidth { get { return stageWidth; } }
     Vector3 stageSize;
 
+    float cameraWidth
+    {
+        get
+        {
+            float height = 2f * mainCamera.orthographicSize;
+            return height * mainCamera.aspect;
+        }
+    }
+
+
+    public GridPattern gridPattern;
+    public PointGrid pointGrid;
+
     private void Awake()
     {
         LoadCommandLine();
@@ -33,11 +46,6 @@ public class AlignProjectionManager : MonoBehaviour
 
     public void Initialize()
     {
-        if (mainCamera == null)
-            return;
-
-        mainCamera.orthographicSize = 1;
-
         for (int i = 0; i < projectorNums.Length; i++)
         {
             totalProjectorNum += projectorNums[i];
@@ -46,6 +54,10 @@ public class AlignProjectionManager : MonoBehaviour
         SetStage();
         SetCanvas();
         SetCamera();
+
+
+        gridPattern.Generate(FullScreenResolution.x);
+        pointGrid.Generate(FullScreenResolution.x);
     }
 
     private void SetStage()
@@ -68,7 +80,7 @@ public class AlignProjectionManager : MonoBehaviour
         mainCanvas.GetComponent<Canvas>().worldCamera = mainCamera;
         mainCanvas.GetComponent<RectTransform>().sizeDelta = fullScreenResolution;
         mainCanvas.transform.localScale = Vector3.one * (stageWidth / fullScreenResolution.x);
-        mainCanvas.transform.localPosition = new Vector3(0, 1, 0);
+        mainCanvas.transform.localPosition = new Vector3(0, 1, stageSize.z);
     }
 
     private void SetCamera()
@@ -76,6 +88,7 @@ public class AlignProjectionManager : MonoBehaviour
         if (mainCamera == null)
             return;
 
+        mainCamera.orthographicSize = 1;
         mainCamera.nearClipPlane = -1;
 
         var screenIdx = screenIndex;
@@ -88,13 +101,16 @@ public class AlignProjectionManager : MonoBehaviour
         for (int i = 0; i < screenIdx; i++)
         {
             var ww = (float)projectorNums[i] / (float)totalProjectorNum;
+
+            Debug.Log("stageWidth : " + stageWidth);
+
             if (screenIdx > 1 && i < screenIdx - 1)
             {
                 offset_x += (stageWidth * ww);
             }
             else
             {
-                offset_x += (stageWidth * ww) / 2f;
+                offset_x += (stageWidth * (cameraWidth / stageWidth)) / 2f;
             }
         }
 
@@ -108,7 +124,7 @@ public class AlignProjectionManager : MonoBehaviour
         string[] args = System.Environment.GetCommandLineArgs();
 
         if (Application.isEditor)
-            args = new string[] { "-ScreenIndex", "1", "-ProjectorNums", "2:2:3", "-ScreenResolution", "1920:1080" };
+            args = new string[] { "-ScreenIndex", "1", "-ProjectorNums", "1:4:1", "-ScreenResolution", "1920:1080" };
 
         for (int i = 0; i < args.Length; i++)
         {
